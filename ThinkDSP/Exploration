@@ -1,0 +1,8 @@
+from __future__ import print_function, division
+
+from code import thinkdsp
+from code import thinkplot
+
+cos_sig = thinkdsp.CosSignal(freq=440)
+cos_sig.plot()
+thinkplot.config(xlabel='time (s)', legend=False)
