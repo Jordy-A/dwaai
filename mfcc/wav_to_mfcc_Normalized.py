@@ -23,6 +23,9 @@ mfcc_features = mfcc(sig, rate, nfft=2048)
 
 # Normalize MFCC by subtracting the mean and using standard deviation 
 # In the future, we should possibly do this only with the training data
+mean = np.mean(mfcc_features, axis=0)
+std = np.std(mfcc_features, axis=0)
+mfcc_features = (mfcc_features - mean)/std
 
 # Print MFCC
 print(mfcc_features)
