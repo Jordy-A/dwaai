@@ -3,11 +3,25 @@ import pandas as pd
 import os
 import librosa
 import numpy as np
+import os
+
+'''
+from pydub import AudioSegment
+
+# Convert mp3 to WAV
+src1 = "C:\\Users\\s157874\\Documents\\GitHub\\dwaai\\mfcc\\example_datas\\Dutch\\dutch1.mp3"
+dst1 = "C:\\Users\\s157874\\Documents\\GitHub\\dwaai\\mfcc\\example_datas\\Dutch_wav\\dutch1.wav"
+# convert wav to mp3                                                            
+sound = AudioSegment.from_mp3(src1)
+sound.export(dst1, format="wav")
+print(sound.export)
+
+'''
 
 # Define a function that will generate MFCC from a given audio file
 def extract_features(file_name):
     # Print current audio file
-    print('Loading: "', file_name, '"')
+    # print('Loading: "', file_name, '"')
     try:
         # Load audio file into librosa
         audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
@@ -26,7 +40,6 @@ def extract_features(file_name):
 # Create an empty array with the features that are about to be generated
 features = []
 
-
 # =========================================================================================================
 # THE FOLLOWING THING IS A 'WINDOWS' THING'. WHEN USING MAC OR LINUX, COPY PASTE THE FOLLOWING CODE IN HERE
 # =========================================================================================================
@@ -42,7 +55,6 @@ for className in os.listdir('./samples'):
         # Then store the resulting MFCC in the feature array under the
         # classification of the parent classifier
         features.append([data, className])
-'''
 
 # Retrieve current working directory
 path = os.getcwd() 
@@ -82,6 +94,48 @@ for className in os.listdir(os.getcwd()):
 # ============================================
 # END OF THE 'WINDOWS THING' 
 # =============================================
+
+'''
+
+# =========================================================================================================
+# DIFFERENT DATASET: EXAMPLES DATASET: 47 DUTCH WAV FILES AND 50 ENGLISH WAVS. (THIS IS ALSO FOR WINDOWS)
+# =========================================================================================================
+
+# Retrieve current working directory
+path = os.getcwd() 
+print(path)
+
+# Apparently on Windows, this is the root path, therefore we change it to the right path
+os.chdir("C:\\Users\\s157874\\Documents\\GitHub\\dwaai\\mfcc\\example_datas")
+path = os.getcwd() 
+#print(path)
+
+# Get the list of all files and directories 
+# in current working directory 
+dir_list = os.listdir(path) 
+
+for className in os.listdir(os.getcwd()):
+	
+	print(className)
+	# Navigate to the map called english (which contain all our english accent samples)
+	if className == "Dutch_wav":
+		for fileName in os.listdir(os.getcwd() + "\\Dutch_wav"):
+			# Generate the MFCC for the given audio file
+			data = extract_features(os.getcwd() + "\\Dutch_wav\\" + fileName)
+			# Then store the resulting MFCC in the feature array under the
+			# classification of the parent classifier
+			features.append([data, className])
+
+	# Navigate to the map called korean (which contain all our korean accent samples)
+	if className == "English_wav":
+
+		for fileName in os.listdir(os.getcwd() + "\\English_wav"):
+			# Generate the MFCC for the given audio file
+			data = extract_features(os.getcwd() + "\\English_wav\\" + fileName)
+			# Then store the resulting MFCC in the feature array under the
+			# classification of the parent classifier
+			features.append([data, className])
+
 
 # Lastly, put the resulting array in a pandas DataFrame
 featuresdf = pd.DataFrame(features, columns=['feature', 'class_label'])
@@ -192,22 +246,24 @@ from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.normalization import BatchNormalization
-from keras.layers.convolutional import Convolution1D, MaxPooling1D
+from keras.layers.convolutional import Conv1D, MaxPooling1D
 from keras.utils import np_utils
+from keras.utils import to_categorical
 from keras.layers import GaussianNoise
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 test_dim = 2999
 maxlen = 100
-batch_size = 100
+batch_size = 82
 nb_filter = 64
-filter_length_1 = 50
+filter_length_1 = 40
 filter_length_2 = 25
 hidden_dims = 250
 nb_epoch = 8
 nb_classes = 2
 
 from sklearn.preprocessing import LabelEncoder
-from keras.utils import to_categorical
 
 # Convert features and corresponding classification labels into numpy arrays
 X = np.array(featuresdf.feature.tolist())
@@ -222,13 +278,13 @@ from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(X, yy, test_size=0.15)
 
-xts = X_train.shape
+xts =X_train.shape
 xtss = X_test.shape
 yts = y_train.shape
 ytss = y_test.shape
 
-X_train = X_train.reshape(17, 40, 1)
-X_test = X_test.reshape(3, 40, 1)
+X_train = np.reshape(X_train, (xts[0], xts[1], 1))
+X_test = np.reshape(X_test, (xtss[0], xtss[1], 1))
 
 print(len(X_train), 'training sequences, ', len(X_test), 'test sequences')
 
@@ -245,52 +301,77 @@ model = Sequential()
 # model.add(Dropout(0.25))
 
 model.add(GaussianNoise(0.1, input_shape=(40,1)))
+print('Added noise...')
 
 # we add a Convolution1D, which will learn nb_filter
 # word group filters of size filter_length:
-model.add(Convolution1D(nb_filter=nb_filter,
-                        filter_length=filter_length_1,
-                        input_shape=(test_dim, 13),
-                        border_mode='valid',
-                        activation='relu'
+model.add(Conv1D(input_shape=(test_dim, 13),
+                        activation="relu",
+						filters=nb_filter,
+						kernel_size=filter_length_1, 
+                        padding="valid",
                         ))
+
+print('Added a  Conv1D layer...')
 # we use standard max pooling (halving the output of the previous layer):
 model.add(BatchNormalization())
 
-model.add(Convolution1D(nb_filter=nb_filter,
-                        filter_length=filter_length_2,
-                        border_mode='same',
-                        activation='relu'
+print('Used Batch Normalization..')
+
+'''
+
+model.add(Conv1D(input_shape=(test_dim, 13),
+                        activation="relu",
+						filters=nb_filter,
+						kernel_size=filter_length_2, 
+                        padding="valid",
+                        ))
+
+print('Added a  Conv1D layer...')
+
+model.add(BatchNormalization())
+
+print('Used Batch Normalization...')
+
+model.add(MaxPooling1D(pool_length=1))
+
+print('Added standard pooling...')
+
+model.add(Conv1D(input_shape=(test_dim, 13),
+                        activation="relu",
+						filters=nb_filter,
+						kernel_size=filter_length_2, 
+                        padding="valid",
                         ))
 
 model.add(BatchNormalization())
 
-model.add(MaxPooling1D(pool_length=2))
+print('Used Batch Normalization...')
 
-model.add(Convolution1D(nb_filter=nb_filter,
-                        filter_length=filter_length_2,
-                        border_mode='same',
-                        activation='relu'
-                        ))
+'''
 
-model.add(BatchNormalization())
+model.add(MaxPooling1D(pool_size=1))
 
-model.add(MaxPooling1D(pool_length=2))
+print('Added standard pooling...')
 
 # We flatten the output of the conv layer,
 # so that we can add a vanilla dense layer:
 model.add(Flatten())
+
+print('Flatten...')
 
 # We add a vanilla hidden layer:
 model.add(Dense(hidden_dims))
 model.add(Dropout(0.25))
 model.add(Activation('relu'))
 
+print('Added a vanilla layer')
+
 # We project onto a single unit output layer, and squash it with a sigmoid:
 model.add(Dense(2))
 model.add(Activation('softmax'))
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
-model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch, verbose=1, validation_data=(X_test, Y_test))
+model.fit(X_train, Y_train, batch_size=None, nb_epoch=nb_epoch, verbose=1, validation_data=(X_test, Y_test))
 y_preds = model.predict(X_test)
 score = model.evaluate(X_test, Y_test,  verbose=1)
 print(score)
