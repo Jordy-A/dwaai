@@ -191,6 +191,7 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
 
 # Convert features and corresponding classification labels into numpy arrays
 X = np.array(featuresdf.feature.tolist())
@@ -289,15 +290,18 @@ X_test = np.reshape(X_test, (xtss[0], xtss[1], 1))
 print(len(X_train), 'training sequences, ', len(X_test), 'test sequences')
 print(X_train.shape)
 
-Y_train = np_utils.to_categorical(y_train, nb_classes)
-Y_test = np_utils.to_categorical(y_test, nb_classes)
+# Y_train = np_utils.to_categorical(y_train, nb_classes)
+# Y_test = np_utils.to_categorical(y_test, nb_classes)
 
-yts = Y_train.shape
-Y_train = np.reshape(y_train, (yts[0], 1))
-ytss = y_test.shape
-Y_test = np.reshape(y_test, (ytss[0], 1))
+# yts = Y_train.shape
+# Y_train = np.reshape(y_train, (yts[0], 1))
+# ytss = y_test.shape
+# Y_test = np.reshape(y_test, (ytss[0], 1))
 
-print(Y_train.shape)
+cat = LabelEncoder()
+
+
+print(y_train.shape)
 
 print('Build model...')
 model = Sequential()
@@ -388,10 +392,9 @@ model.get_config()
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
 model.summary()
 model.get_config()
-model.fit(X_train, Y_train, batch_size=82, nb_epoch=5, verbose=1, validation_data=(X_test, Y_test))
+model.fit(X_train, y_train, batch_size=82, nb_epoch=5, verbose=1, validation_data=(X_test, y_test))
+
 y_preds = model.predict(X_test)
-score = model.evaluate(X_test, Y_test, verbose=1)
-print(score)
-print(classification_report(y_test, y_preds))
-
-
+score = model.evaluate(X_test, y_test, verbose=1)
+print("Score:", score)
+print(classification_report(y_test.argmax(axis=1), y_preds.argmax(axis=1), target_names=le.classes_))
