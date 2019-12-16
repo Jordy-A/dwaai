@@ -1,3 +1,5 @@
+no_mfcc_bands = 120
+
 # Load various imports 
 import pandas as pd
 import os
@@ -255,12 +257,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 test_dim = 1
 maxlen = 100
 batch_size = 82
-nb_filter = 64
+nb_filter = 256
 #kernelsize
-filter_length_1 = 10
+filter_length_1 = 20
 filter_length_2 = 10
 hidden_dims = 250
-nb_epoch = 5
+nb_epoch = 20
 nb_classes = 2
 
 from sklearn.preprocessing import LabelEncoder
@@ -315,7 +317,7 @@ print(X_train.shape, 'After buidling model')
 # model.add(Embedding(max_features, embedding_dims, input_length=maxlen))
 # model.add(Dropout(0.25))
 
-model.add(GaussianNoise(0.1, input_shape=(40,1)))
+model.add(GaussianNoise(0.1, input_shape=(no_mfcc_bands,1)))
 print('Added noise...')
 
 print(X_train.shape, 'After adding noise')
@@ -323,7 +325,7 @@ print(X_train.shape, 'After adding noise')
 
 # we add a Convolution1D, which will learn nb_filter
 # word group filters of size filter_length:
-model.add(Conv1D(input_shape=(40, 1),
+model.add(Conv1D(input_shape=(no_mfcc_bands, 1),
                         activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_1, 
@@ -342,8 +344,7 @@ model.get_config()
 
 print('Used Batch Normalization..')
 
-model.add(Conv1D(input_shape=(31, 64),
-                        activation="relu",
+model.add(Conv1D(activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_2, 
                         padding="valid",
@@ -364,8 +365,7 @@ model.summary()
 model.get_config()
 
 print('Added standard pooling...')
-model.add(Conv1D(input_shape=(22, 64),
-                        activation="relu",
+model.add(Conv1D(activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_2, 
                         padding="valid",
@@ -392,7 +392,7 @@ model.get_config()
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
 model.summary()
 model.get_config()
-model.fit(X_train, y_train, batch_size=82, nb_epoch=5, verbose=1, validation_data=(X_test, y_test))
+model.fit(X_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(X_test, y_test))
 
 y_preds = model.predict(X_test)
 score = model.evaluate(X_test, y_test, verbose=1)
