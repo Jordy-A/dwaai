@@ -29,7 +29,7 @@ def extract_features(file_name):
         audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
 
         # Generate MFCC
-        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=no_mfcc_bands)
         mfccsscaled = np.mean(mfccs.T,axis=0)
         
     except Exception as e:
