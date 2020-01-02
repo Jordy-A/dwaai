@@ -1,3 +1,5 @@
+no_mfcc_bands = 120
+
 # Load various imports 
 import pandas as pd
 import os
@@ -27,7 +29,7 @@ def extract_features(file_name):
         audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
 
         # Generate MFCC
-        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=no_mfcc_bands)
         mfccsscaled = np.mean(mfccs.T,axis=0)
         
     except Exception as e:
@@ -142,7 +144,7 @@ featuresdf = pd.DataFrame(features, columns=['feature', 'class_label'])
 
 print('Finished feature extraction from ', len(featuresdf), ' files')
 
-'''
+
 #===================================
 #   RANDOM FOREST
 #===================================
@@ -181,8 +183,6 @@ feature_imp = pd.Series(classifier.feature_importances_).sort_values(ascending=F
 print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
 print("Feature importance:", feature_imp)
 
-'''
-
 #===================================
 #   GRADIENT BOOSTING
 #===================================
@@ -193,6 +193,7 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
 
 # Convert features and corresponding classification labels into numpy arrays
 X = np.array(featuresdf.feature.tolist())
@@ -253,14 +254,15 @@ from keras.layers import GaussianNoise
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-test_dim = 2999
+test_dim = 1
 maxlen = 100
 batch_size = 82
-nb_filter = 64
-filter_length_1 = 40
-filter_length_2 = 25
+nb_filter = 256
+#kernelsize
+filter_length_1 = 20
+filter_length_2 = 10
 hidden_dims = 250
-nb_epoch = 8
+nb_epoch = 20
 nb_classes = 2
 
 from sklearn.preprocessing import LabelEncoder
@@ -278,21 +280,36 @@ from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(X, yy, test_size=0.15)
 
-xts =X_train.shape
+print(X_train.shape, 'After first row')
+print(y_train.shape, 'y')
+
+xts = X_train.shape
 xtss = X_test.shape
-yts = y_train.shape
-ytss = y_test.shape
 
 X_train = np.reshape(X_train, (xts[0], xts[1], 1))
 X_test = np.reshape(X_test, (xtss[0], xtss[1], 1))
 
 print(len(X_train), 'training sequences, ', len(X_test), 'test sequences')
+print(X_train.shape)
 
-Y_train = np_utils.to_categorical(y_train, nb_classes)
-Y_test = np_utils.to_categorical(y_test, nb_classes)
+# Y_train = np_utils.to_categorical(y_train, nb_classes)
+# Y_test = np_utils.to_categorical(y_test, nb_classes)
+
+# yts = Y_train.shape
+# Y_train = np.reshape(y_train, (yts[0], 1))
+# ytss = y_test.shape
+# Y_test = np.reshape(y_test, (ytss[0], 1))
+
+cat = LabelEncoder()
+
+
+print(y_train.shape)
 
 print('Build model...')
 model = Sequential()
+
+print(X_train.shape, 'After buidling model')
+
 
 # # we start off with an efficient embedding layer which maps
 # # our vocab indices into embedding_dims dimensions
@@ -300,32 +317,41 @@ model = Sequential()
 # model.add(Embedding(max_features, embedding_dims, input_length=maxlen))
 # model.add(Dropout(0.25))
 
-model.add(GaussianNoise(0.1, input_shape=(40,1)))
+model.add(GaussianNoise(0.1, input_shape=(no_mfcc_bands,1)))
 print('Added noise...')
+
+print(X_train.shape, 'After adding noise')
+
 
 # we add a Convolution1D, which will learn nb_filter
 # word group filters of size filter_length:
-model.add(Conv1D(input_shape=(test_dim, 13),
+model.add(Conv1D(input_shape=(no_mfcc_bands, 1),
                         activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_1, 
                         padding="valid",
                         ))
 
+model.summary()
+model.get_config()
+
 print('Added a  Conv1D layer...')
 # we use standard max pooling (halving the output of the previous layer):
 model.add(BatchNormalization())
 
+model.summary()
+model.get_config()
+
 print('Used Batch Normalization..')
 
-'''
-
-model.add(Conv1D(input_shape=(test_dim, 13),
-                        activation="relu",
+model.add(Conv1D(activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_2, 
                         padding="valid",
                         ))
+
+model.summary()
+model.get_config()
 
 print('Added a  Conv1D layer...')
 
@@ -333,48 +359,42 @@ model.add(BatchNormalization())
 
 print('Used Batch Normalization...')
 
-model.add(MaxPooling1D(pool_length=1))
+model.add(MaxPooling1D(pool_size=1))
+
+model.summary()
+model.get_config()
 
 print('Added standard pooling...')
-
-model.add(Conv1D(input_shape=(test_dim, 13),
-                        activation="relu",
+model.add(Conv1D(activation="relu",
 						filters=nb_filter,
 						kernel_size=filter_length_2, 
                         padding="valid",
                         ))
-
 model.add(BatchNormalization())
-
 print('Used Batch Normalization...')
-
-'''
-
 model.add(MaxPooling1D(pool_size=1))
-
 print('Added standard pooling...')
-
 # We flatten the output of the conv layer,
 # so that we can add a vanilla dense layer:
 model.add(Flatten())
-
 print('Flatten...')
-
 # We add a vanilla hidden layer:
-model.add(Dense(hidden_dims))
+model.add(Dense(hidden_dims, activation='relu'))
 model.add(Dropout(0.25))
-model.add(Activation('relu'))
-
+# model.add(Activation('relu'))
+model.summary()
+model.get_config()
 print('Added a vanilla layer')
-
 # We project onto a single unit output layer, and squash it with a sigmoid:
-model.add(Dense(2))
-model.add(Activation('softmax'))
+model.add(Dense(2, activation='softmax'))
+model.summary()
+model.get_config()
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
-model.fit(X_train, Y_train, batch_size=None, nb_epoch=nb_epoch, verbose=1, validation_data=(X_test, Y_test))
+model.summary()
+model.get_config()
+model.fit(X_train, y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(X_test, y_test))
+
 y_preds = model.predict(X_test)
-score = model.evaluate(X_test, Y_test,  verbose=1)
-print(score)
-print(classification_report(y_test, y_preds))
-
-
+score = model.evaluate(X_test, y_test, verbose=1)
+print("Score:", score)
+print(classification_report(y_test.argmax(axis=1), y_preds.argmax(axis=1), target_names=le.classes_))
