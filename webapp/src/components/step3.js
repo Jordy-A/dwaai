@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
+import Recorder from 'recorder-js';
 import ClipLoader from "react-spinners/ClipLoader";
 
 export default function Step3(props) {
+  const [recorder] = useState(
+    new Recorder(new window.AudioContext(), {
+      onAnalysed: (data) => {
+        console.log("Recording: data:" + data);// An array of 255 Numbers, you can use this to visualize the audio stream (e.g. react-wave-stream)
+      },
+    })
+  );
+
   const [countdownLeft, setCountdownLeft] = useState(3);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -12,15 +21,6 @@ export default function Step3(props) {
   const [word5, setWord5] = useState();
   const [word6, setWord6] = useState();
 
-  const countdown = () => {
-    let newTimeLeft = countdownLeft - 1;
-
-    if (countdownLeft !== 0 && newTimeLeft === 0 ) {
-      startKaraoke();
-    }
-
-    return newTimeLeft;
-  };
 
   const startKaraoke = () => {
     setTimeout(() => { setWord1('said') }, 0 );
@@ -35,15 +35,62 @@ export default function Step3(props) {
                        setWord4('');
                        setWord5('');
                        setWord6('') }, 3000 );
+    setTimeout(() => { stopRecording() }, 3000 );
     setTimeout(() => { setIsAnalyzing(true) }, 3000 );
     setTimeout(() => { props.setStep(4) }, 5000 );
   }
 
+
+  const initRecorder = () => {
+    navigator.mediaDevices.getUserMedia({audio: true, video:false})
+      .then(function(stream) {
+        recorder.init(stream);
+        console.log("Recording: initializing...");
+      })
+      .catch(err => console.log('Recording: failed. Unable to get stream...', err));
+  }
+
+  const startRecording = () => {
+		recorder.start()
+		  .then( console.log("Recording: started") );
+  }
+
+  const stopRecording = () => {
+    recorder.stop()
+      .then(({blob, buffer}) => {
+        console.log("Recording: stopped");
+
+        downloadRecording(blob);
+      });
+  }
+
+  const downloadRecording = (blob) => {
+    Recorder.download(blob, 'audiofile');
+    /* alternatively: https://blog.addpipe.com/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
+  }
+
+
+  //start countdown
   useEffect(() => {
-    setTimeout(() => {
-      setCountdownLeft(countdown());
+    const interval = setInterval(() => {
+      setCountdownLeft(countdownLeft => countdownLeft - 1);
     }, 1000);
-  });
+
+    if (countdownLeft === 3 ) {
+      initRecorder();//initialize recorder
+    }
+
+    if (countdownLeft === 1 ) {
+      startRecording();//start recording
+    }
+
+    if (countdownLeft === 0 ) {
+      clearInterval(interval);
+      startKaraoke();//start karaoke
+    }
+
+    return () => clearInterval(interval);
+  }, [countdownLeft]);
 
   return (
     <div>
