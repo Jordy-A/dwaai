@@ -11,5 +11,5 @@ app.listen(port, () => console.log(`Listening on port ${port}`));
 // routes
 app.post('/recording', upload.single('audio'), function (req, res) {
   console.log(req.file);
-  res.send({ express: 'ok' });
+  res.send({ result: '10' });
 });

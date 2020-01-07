@@ -6,7 +6,8 @@ export default function Step3(props) {
   const [recorder] = useState(
     new Recorder(new window.AudioContext(), {
       onAnalysed: (data) => {
-        console.log("Recording: data:" + data);// An array of 255 Numbers, you can use this to visualize the audio stream (e.g. react-wave-stream)
+        // An array of 255 Numbers, useful to visualize audio stream (e.g. react-wave-stream)
+        console.log("Recording: data:" + data);
       },
     })
   );
@@ -35,9 +36,7 @@ export default function Step3(props) {
                        setWord4('');
                        setWord5('');
                        setWord6('') }, 3000 );
-    setTimeout(() => { stopRecording() }, 3000 );
-    setTimeout(() => { setIsAnalyzing(true) }, 3000 );
-    setTimeout(() => { props.setStep(4) }, 5000 );
+    setTimeout(() => { stopRecording() }, 3300 );
   }
 
 
@@ -59,20 +58,18 @@ export default function Step3(props) {
     recorder.stop()
       .then(({blob, buffer}) => {
         console.log("Recording: stopped");
-        //downloadRecording(blob);
-        sendRecording(blob)
-          .then(res => console.log(res.express))
+        setIsAnalyzing(true);
+        //Recorder.download(blob, 'audiofile');
+        postRecording(blob)
+          .then((res) => {
+            props.setRecordingResult(res.result);
+            props.setStep(4);
+          })
           .catch(err => console.log(err));
       });
   }
 
-  /*const downloadRecording = (blob) => {
-    Recorder.download(blob, 'audiofile');
-    console.log(blob);
-    // alternatively: https://blog.addpipe.com/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/
-  }*/
-
-  const sendRecording = async (blob) => {
+  const postRecording = async (blob) => {
     var recordingData = new FormData();
     recordingData.append('audio', blob);
 
