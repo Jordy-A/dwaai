@@ -74,7 +74,7 @@ export default function Step3(props) {
 
   const sendRecording = async (blob) => {
     var recordingData = new FormData();
-    recordingData.append('audio', blob);
+    recordingData.append('audio', blob, Date.now() + '.wav');
 
     const response = await fetch('/recording', {
         method: 'POST',
