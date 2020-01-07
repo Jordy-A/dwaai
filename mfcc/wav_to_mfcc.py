@@ -6,7 +6,7 @@ from python_speech_features import logfbank
 import scipy.io.wavfile as wav
 import numpy as np
 import sys
-from keras.layers import GaussianNoise    
+# from keras.layers import GaussianNoise    
 
 # GUARD: Check if someone has supplied an argument
 if len(sys.argv) < 2:
@@ -26,3 +26,4 @@ mfcc_features = mfcc(sig, rate, nfft=2048)
 
 # Print MFCC
 print(mfcc_features)
+sys.stdout.flush()
