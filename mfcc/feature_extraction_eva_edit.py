@@ -29,7 +29,7 @@ def extract_features(file_name):
         audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
 
         # Generate MFCC
-        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+        mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=no_mfcc_bands)
         mfccsscaled = np.mean(mfccs.T,axis=0)
         
     except Exception as e:
@@ -302,14 +302,12 @@ print(X_train.shape)
 
 cat = LabelEncoder()
 
-
 print(y_train.shape)
 
 print('Build model...')
 model = Sequential()
 
 print(X_train.shape, 'After buidling model')
-
 
 # # we start off with an efficient embedding layer which maps
 # # our vocab indices into embedding_dims dimensions
@@ -321,7 +319,6 @@ model.add(GaussianNoise(0.1, input_shape=(no_mfcc_bands,1)))
 print('Added noise...')
 
 print(X_train.shape, 'After adding noise')
-
 
 # we add a Convolution1D, which will learn nb_filter
 # word group filters of size filter_length:
