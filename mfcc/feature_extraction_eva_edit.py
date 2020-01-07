@@ -302,14 +302,12 @@ print(X_train.shape)
 
 cat = LabelEncoder()
 
-
 print(y_train.shape)
 
 print('Build model...')
 model = Sequential()
 
 print(X_train.shape, 'After buidling model')
-
 
 # # we start off with an efficient embedding layer which maps
 # # our vocab indices into embedding_dims dimensions
@@ -321,7 +319,6 @@ model.add(GaussianNoise(0.1, input_shape=(no_mfcc_bands,1)))
 print('Added noise...')
 
 print(X_train.shape, 'After adding noise')
-
 
 # we add a Convolution1D, which will learn nb_filter
 # word group filters of size filter_length:
