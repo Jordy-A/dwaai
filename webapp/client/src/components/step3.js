@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Recorder from 'recorder-js';
 import ClipLoader from "react-spinners/ClipLoader";
+import { motion } from 'framer-motion';
 
 export default class Step3 extends Component {
   countdownInterval = null;
@@ -150,10 +151,14 @@ export default class Step3 extends Component {
           <span className={karaokeIndex === 5 ? 'said' : null}>ban</span>
           <span className={karaokeIndex === 6 ? 'said' : null}>der?</span>
         </h1>
-        {isRecording &&
+        {(isRecording || isAnalyzing) &&
           <div className="analysis">
             {visualisationValues.map((height, i) => 
-              <div key={i} style={{ height }} />
+              <motion.div 
+                key={i} 
+                animate={{ height }}
+                positionTransition 
+              />
             )}
           </div>
         }
