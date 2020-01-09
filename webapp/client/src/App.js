@@ -8,6 +8,7 @@ import Step4 from "./components/step4";
 function App() {
   const [step, setStep] = useState(1);
   const [recordingResult, setRecordingResult] = useState();
+  const [visualisationResult, setVisualisationResult] = useState();
 
   return (
     <div className="App">
@@ -16,7 +17,7 @@ function App() {
 
         { step === 1 && <Step1 setStep={setStep} /> }
         { step === 2 && <Step2 setStep={setStep} /> }
-        { step === 3 && <Step3 setStep={setStep} setRecordingResult={setRecordingResult} /> }
+        { step === 3 && <Step3 setStep={setStep} setRecordingResult={setRecordingResult} setVisualisationResult={setVisualisationResult} /> }
         { step === 4 && <Step4 setStep={setStep} recordingResult={recordingResult} /> }
 
       </div>

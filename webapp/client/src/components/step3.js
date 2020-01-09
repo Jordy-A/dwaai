@@ -114,6 +114,7 @@ export default class Step3 extends Component {
       .then((res) => {
         // Return result from back-end to container component
         this.props.setRecordingResult(res.result);
+        this.props.setVisualisationValues(this.state.visualisationValues);
         this.props.setStep(4);
       })
       .catch(err => console.log(err));
