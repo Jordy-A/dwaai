@@ -91,5 +91,29 @@ button:active, button:focus {
 }
 
 #qr-code-scanner > section {
-  width: 50%;
+  height: 30vw;
+  width: 30vw;
+}
+
+#language-picker {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  margin: 50px;
+}
+
+#language-picker > a {
+  color: white;
+  padding: 0 15px;
+  opacity: 0.3;
+  text-decoration: none;
+}
+
+#language-picker > a:hover {
+  opacity: 0.6;
+}
+
+#language-picker > a.active {
+  opacity: 1 !important;
 }

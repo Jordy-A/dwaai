@@ -1,6 +1,12 @@
 import React from "react";
 import QrReader from 'react-qr-reader';
 
+const cta = {
+  en: 'Scan your entry ticket to start',
+  nl: 'Scan uw ticket om te beginnen',
+  br: 'Scant ekkes oew ticket, dan beginnen we'
+}
+
 export default function Step0(props) {
   const setData = (data) => {
     const integer = parseInt(data);
@@ -19,7 +25,7 @@ export default function Step0(props) {
   return (
     <div id='qr-code-scanner'>
       <QrReader onScan={setData} onError={console.error} />
-      <h2>Scan your entry ticket to start</h2>
+      <h2>{cta[props.language]}</h2>
     </div>
   );
 }

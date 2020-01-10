@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import soundfile from '../assets/example.wav';
 
+const intro = {
+  en: 'Listen to an example first.',
+  nl: 'Luister eerst naar een voorbeeld.',
+  br: 'Eerst ekkes luisteren.',
+}
+
+const cta = {
+  en: 'Now, try it yourself!',
+  nl: 'Probeer het nu zelf.',
+  br: 'En nou gij.',
+}
+
 export default function Step2(props) {
   const [word1, setWord1] = useState();
   const [word2, setWord2] = useState();
@@ -44,11 +56,9 @@ export default function Step2(props) {
         <span className={word6}>der?</span>
       </h1>
       {! button ? (
-        <p>
-          Listen to an example first.
-        </p>
+        <p>{intro[props.language]}</p>
       ) : (
-        <button className="style-font" onClick={() => props.setStep(3)}>Now, try it yourself!</button>
+        <button className="style-font" onClick={() => props.setStep(3)}>{cta[props.language]}</button>
       )}
     </div>
   );
