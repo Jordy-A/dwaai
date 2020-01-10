@@ -33,6 +33,9 @@ export default class Step3 extends Component {
   }
 
   handleCountdownTick = () => {
+    // Count down one more
+    this.setState({ countdownLeft: this.state.countdownLeft - 1 });
+
     // Check if the countdown has reached zero
     if (this.state.countdownLeft === 0) {
       // If so, start recording and start karaoke
@@ -40,9 +43,6 @@ export default class Step3 extends Component {
       this.startKaraoke();
       clearInterval(this.countdownInterval);
     }
-
-    // Then, count down one more
-    this.setState({ countdownLeft: this.state.countdownLeft - 1 });
   }
 
   handleAnalysisTick = ({ data }) => {
@@ -50,12 +50,12 @@ export default class Step3 extends Component {
     if (!this.state.isRecording) {
       return;
     }
-    
+
     // Increase analysis tick
     this.analysisTick += 1;
 
     // Exit function if we're not at a particular tick
-    if (this.analysisTick % 5 !== 0) {
+    if (this.analysisTick % 3 !== 0) {
       return;
     }
 
@@ -63,7 +63,7 @@ export default class Step3 extends Component {
     const meanValue = data.reduce((acc, val) => acc + val, 0) / data.length;
 
     // Then apppend this value to the ones in state
-    this.setState({ 
+    this.setState({
       visualisationValues: [
         ...this.state.visualisationValues,
         meanValue
@@ -73,13 +73,13 @@ export default class Step3 extends Component {
 
   startKaraoke = () => {
     setTimeout(() => this.setState({ karaokeIndex: 1 }), 0 );
-    setTimeout(() => this.setState({ karaokeIndex: 2 }), 500 );
-    setTimeout(() => this.setState({ karaokeIndex: 3 }), 1000 );
-    setTimeout(() => this.setState({ karaokeIndex: 4 }), 1400 );
-    setTimeout(() => this.setState({ karaokeIndex: 5 }), 1600 );
-    setTimeout(() => this.setState({ karaokeIndex: 6 }), 1800 );
-    setTimeout(() => this.setState({ karaokeIndex: 0 }), 3000 );
-    setTimeout(() => this.stopRecording(), 3300 );
+    setTimeout(() => this.setState({ karaokeIndex: 2 }), 300 );
+    setTimeout(() => this.setState({ karaokeIndex: 3 }), 500 );
+    setTimeout(() => this.setState({ karaokeIndex: 4 }), 700 );
+    setTimeout(() => this.setState({ karaokeIndex: 5 }), 900 );
+    setTimeout(() => this.setState({ karaokeIndex: 6 }), 1100 );
+    setTimeout(() => this.setState({ karaokeIndex: 0 }), 2000 );
+    setTimeout(() => this.stopRecording(), 2300 );
   }
 
   initRecorder = () => {
@@ -114,7 +114,7 @@ export default class Step3 extends Component {
       .then((res) => {
         // Return result from back-end to container component
         this.props.setRecordingResult(res.result);
-        this.props.setVisualisationValues(this.state.visualisationValues);
+        this.props.setVisualisationResult(this.state.visualisationValues);
         this.props.setStep(4);
       })
       .catch(err => console.log(err));
@@ -154,18 +154,18 @@ export default class Step3 extends Component {
         </h1>
         {(isRecording || isAnalyzing) &&
           <div className="analysis">
-            {visualisationValues.map((height, i) => 
-              <motion.div 
-                key={i} 
+            {visualisationValues.map((height, i) =>
+              <motion.div
+                key={i}
                 animate={{ height }}
-                positionTransition 
+                positionTransition
               />
             )}
           </div>
         }
         <h2>
           {! isAnalyzing ? (
-            (countdownLeft > 0 ? countdownLeft : 'GO!')
+            (countdownLeft > 0 ? countdownLeft : '')
           ) : (
             <ClipLoader
               size={50} // or 150px

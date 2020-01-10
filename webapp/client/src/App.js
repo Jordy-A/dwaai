@@ -15,15 +15,15 @@ function App() {
   const [language, setLanguage] = useState('en');
 
   const state = {
-    step, 
-    setStep, 
-    participantId, 
-    setParticipantId, 
-    recordingResult, 
-    setRecordingResult, 
-    visualisationResult, 
-    setVisualisationResult, 
-    language, 
+    step,
+    setStep,
+    participantId,
+    setParticipantId,
+    recordingResult,
+    setRecordingResult,
+    visualisationResult,
+    setVisualisationResult,
+    language,
     setLanguage
   };
 

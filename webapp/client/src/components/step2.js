@@ -14,30 +14,20 @@ const cta = {
 }
 
 export default function Step2(props) {
-  const [word1, setWord1] = useState();
-  const [word2, setWord2] = useState();
-  const [word3, setWord3] = useState();
-  const [word4, setWord4] = useState();
-  const [word5, setWord5] = useState();
-  const [word6, setWord6] = useState();
+  const [karaokeIndex, setKaraokeIndex] = useState(0);
   const [button, setButton] = useState(false);
 
   const audio = new Audio(soundfile);
 
   const startKaraoke = () => {
     setTimeout(() => { audio.play() }, 0);
-    setTimeout(() => { setWord1('said') }, 0 );
-    setTimeout(() => { setWord2('said') }, 300 );
-    setTimeout(() => { setWord3('said') }, 500 );
-    setTimeout(() => { setWord4('said') }, 700 );
-    setTimeout(() => { setWord5('said') }, 900 );
-    setTimeout(() => { setWord6('said') }, 1100 );
-    setTimeout(() => { setWord1('');
-                       setWord2('');
-                       setWord3('');
-                       setWord4('');
-                       setWord5('');
-                       setWord6('') }, 2000 );
+    setTimeout(() => { setKaraokeIndex(1) }, 0 );
+    setTimeout(() => { setKaraokeIndex(2) }, 300 );
+    setTimeout(() => { setKaraokeIndex(3) }, 500 );
+    setTimeout(() => { setKaraokeIndex(4) }, 700 );
+    setTimeout(() => { setKaraokeIndex(5) }, 900 );
+    setTimeout(() => { setKaraokeIndex(6) }, 1100 );
+    setTimeout(() => { setKaraokeIndex(0); }, 2000 );
     setTimeout(() => { setButton(true) }, 2000 );
   }
 
@@ -48,12 +38,12 @@ export default function Step2(props) {
   return (
     <div>
       <h1 className="style-font">
-        <span className={word1}>Bende </span>
-        <span className={word2}>gij </span>
-        <span className={word3}>een </span>
-        <span className={word4}>Bra</span>
-        <span className={word5}>ban</span>
-        <span className={word6}>der?</span>
+        <span className={karaokeIndex === 1 ? 'said' : null}>Bende </span>
+        <span className={karaokeIndex === 2 ? 'said' : null}>gij </span>
+        <span className={karaokeIndex === 3 ? 'said' : null}>een </span>
+        <span className={karaokeIndex === 4 ? 'said' : null}>Bra</span>
+        <span className={karaokeIndex === 5 ? 'said' : null}>ban</span>
+        <span className={karaokeIndex === 6 ? 'said' : null}>der?</span>
       </h1>
       {! button ? (
         <p>{intro[props.language]}</p>
