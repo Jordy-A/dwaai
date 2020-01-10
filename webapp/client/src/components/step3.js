@@ -1,81 +1,131 @@
-import React, { useState, useEffect } from "react";
+import React, { Component } from "react";
 import Recorder from 'recorder-js';
 import ClipLoader from "react-spinners/ClipLoader";
+import { motion } from 'framer-motion';
 
-export default function Step3(props) {
-  const [recorder] = useState(
-    new Recorder(new window.AudioContext(), {
-      onAnalysed: (data) => {
-        console.log("Recording: data:" + data);// An array of 255 Numbers, you can use this to visualize the audio stream (e.g. react-wave-stream)
-      },
-    })
-  );
+export default class Step3 extends Component {
+  countdownInterval = null;
+  recorder = null;
+  analysisTick = 0;
 
-  const [countdownLeft, setCountdownLeft] = useState(3);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  state = {
+    countdownLeft: 3,
+    isRecording: false,
+    isAnalyzing: false,
+    karaokeIndex: 0,
+    visualisationValues: [],
+  };
 
-  const [word1, setWord1] = useState();
-  const [word2, setWord2] = useState();
-  const [word3, setWord3] = useState();
-  const [word4, setWord4] = useState();
-  const [word5, setWord5] = useState();
-  const [word6, setWord6] = useState();
+  constructor() {
+    super();
 
-
-  const startKaraoke = () => {
-    setTimeout(() => { setWord1('said') }, 0 );
-    setTimeout(() => { setWord2('said') }, 500 );
-    setTimeout(() => { setWord3('said') }, 1000 );
-    setTimeout(() => { setWord4('said') }, 1400 );
-    setTimeout(() => { setWord5('said') }, 1600 );
-    setTimeout(() => { setWord6('said') }, 1800 );
-    setTimeout(() => { setWord1('');
-                       setWord2('');
-                       setWord3('');
-                       setWord4('');
-                       setWord5('');
-                       setWord6('') }, 3000 );
-    setTimeout(() => { stopRecording() }, 3000 );
-    setTimeout(() => { setIsAnalyzing(true) }, 3000 );
-    setTimeout(() => { props.setStep(4) }, 5000 );
+    this.recorder = new Recorder(new window.AudioContext(), {
+      onAnalysed: this.handleAnalysisTick
+    });
   }
 
+  componentDidMount() {
+    // Initialize the recorder on mount
+    this.initRecorder();
 
-  const initRecorder = () => {
-    navigator.mediaDevices.getUserMedia({audio: true, video:false})
-      .then(function(stream) {
-        recorder.init(stream);
+    // Start counting down when the component is mounted
+    this.countdownInterval = setInterval(this.handleCountdownTick, 1000);
+  }
+
+  handleCountdownTick = () => {
+    // Check if the countdown has reached zero
+    if (this.state.countdownLeft === 0) {
+      // If so, start recording and start karaoke
+      this.startRecording();
+      this.startKaraoke();
+      clearInterval(this.countdownInterval);
+    }
+
+    // Then, count down one more
+    this.setState({ countdownLeft: this.state.countdownLeft - 1 });
+  }
+
+  handleAnalysisTick = ({ data }) => {
+    // Don't handle data unless we're recording
+    if (!this.state.isRecording) {
+      return;
+    }
+    
+    // Increase analysis tick
+    this.analysisTick += 1;
+
+    // Exit function if we're not at a particular tick
+    if (this.analysisTick % 5 !== 0) {
+      return;
+    }
+
+    // Calculate mean value across frequencies
+    const meanValue = data.reduce((acc, val) => acc + val, 0) / data.length;
+
+    // Then apppend this value to the ones in state
+    this.setState({ 
+      visualisationValues: [
+        ...this.state.visualisationValues,
+        meanValue
+      ]
+    });
+  }
+
+  startKaraoke = () => {
+    setTimeout(() => this.setState({ karaokeIndex: 1 }), 0 );
+    setTimeout(() => this.setState({ karaokeIndex: 2 }), 500 );
+    setTimeout(() => this.setState({ karaokeIndex: 3 }), 1000 );
+    setTimeout(() => this.setState({ karaokeIndex: 4 }), 1400 );
+    setTimeout(() => this.setState({ karaokeIndex: 5 }), 1600 );
+    setTimeout(() => this.setState({ karaokeIndex: 6 }), 1800 );
+    setTimeout(() => this.setState({ karaokeIndex: 0 }), 3000 );
+    setTimeout(() => this.stopRecording(), 3300 );
+  }
+
+  initRecorder = () => {
+    navigator.mediaDevices.getUserMedia({ audio: true, video:false })
+      .then((stream) => {
+        this.recorder.init(stream);
         console.log("Recording: initializing...");
       })
       .catch(err => console.log('Recording: failed. Unable to get stream...', err));
   }
 
-  const startRecording = () => {
-		recorder.start()
+  startRecording = () => {
+    // Set flag for recording
+    this.setState({ isRecording: true });
+
+    // Start the recorder and log to console
+		this.recorder.start()
 		  .then( console.log("Recording: started") );
   }
 
-  const stopRecording = () => {
-    recorder.stop()
-      .then(({blob, buffer}) => {
+  stopRecording = () => {
+    // Set flag for recording
+    this.setState({ isRecording: false, isAnalyzing: true });
+
+    // Stop the recorder
+    this.recorder.stop()
+      .then(({ blob, buffer}) => {
+        // Log stopped recording and post blob to back-end
         console.log("Recording: stopped");
-        //downloadRecording(blob);
-        sendRecording(blob)
-          .then(res => console.log(res.express))
-          .catch(err => console.log(err));
-      });
+        return this.postRecording(blob);
+      })
+      .then((res) => {
+        // Return result from back-end to container component
+        this.props.setRecordingResult(res.result);
+        this.props.setVisualisationValues(this.state.visualisationValues);
+        this.props.setStep(4);
+      })
+      .catch(err => console.log(err));
   }
 
-  /*const downloadRecording = (blob) => {
-    Recorder.download(blob, 'audiofile');
-    console.log(blob);
-    // alternatively: https://blog.addpipe.com/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/
-  }*/
-
-  const sendRecording = async (blob) => {
+  postRecording = async (blob) => {
+    // Prepare blob for sending using multipart forms
     var recordingData = new FormData();
     recordingData.append('audio', blob, Date.now() + '.wav');
 
+    // Send request
     const response = await fetch('/recording', {
         method: 'POST',
         body: recordingData
@@ -85,53 +135,46 @@ export default function Step3(props) {
     if (response.status !== 200) {
       throw Error(body.message)
     }
+
     return body;
   };
 
+  render() {
+    const { countdownLeft, karaokeIndex, isAnalyzing, isRecording, visualisationValues } = this.state;
 
-  //start countdown
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountdownLeft(countdownLeft => countdownLeft - 1);
-    }, 1000);
-
-    if (countdownLeft === 3 ) {
-      initRecorder();//initialize recorder
-    }
-
-    if (countdownLeft === 1 ) {
-      startRecording();//start recording
-    }
-
-    if (countdownLeft === 0 ) {
-      clearInterval(interval);
-      startKaraoke();//start karaoke
-    }
-
-    return () => clearInterval(interval);
-  }, [countdownLeft]);
-
-  return (
-    <div>
-      <h1 className="style-font">
-        <span className={word1}>Bende </span>
-        <span className={word2}>gij </span>
-        <span className={word3}>een </span>
-        <span className={word4}>Bra</span>
-        <span className={word5}>ban</span>
-        <span className={word6}>der?</span>
-      </h1>
-      <h2>
-        {! isAnalyzing ? (
-          (countdownLeft > 0 ? countdownLeft : 'GO!')
-        ) : (
-          <ClipLoader
-            size={50} // or 150px
-            color={"#000"}
-            loading={isAnalyzing}
-          />
-        )}
-      </h2>
-    </div>
-  );
+    return (
+      <div>
+        <h1 className="style-font">
+          <span className={karaokeIndex === 1 ? 'said' : null}>Bende </span>
+          <span className={karaokeIndex === 2 ? 'said' : null}>gij </span>
+          <span className={karaokeIndex === 3 ? 'said' : null}>een </span>
+          <span className={karaokeIndex === 4 ? 'said' : null}>Bra</span>
+          <span className={karaokeIndex === 5 ? 'said' : null}>ban</span>
+          <span className={karaokeIndex === 6 ? 'said' : null}>der?</span>
+        </h1>
+        {(isRecording || isAnalyzing) &&
+          <div className="analysis">
+            {visualisationValues.map((height, i) => 
+              <motion.div 
+                key={i} 
+                animate={{ height }}
+                positionTransition 
+              />
+            )}
+          </div>
+        }
+        <h2>
+          {! isAnalyzing ? (
+            (countdownLeft > 0 ? countdownLeft : 'GO!')
+          ) : (
+            <ClipLoader
+              size={50} // or 150px
+              color={"#000"}
+              loading={isAnalyzing}
+            />
+          )}
+        </h2>
+      </div>
+    );
+  }
 }
