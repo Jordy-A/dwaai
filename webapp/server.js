@@ -1,4 +1,6 @@
-/*const path = require('path');
+require('dotenv-defaults').config()
+
+const path = require('path');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
@@ -22,8 +24,12 @@ app.post('/recording', upload.single('audio'), function (req, res) {
   // Log the file coming in
   console.log(req.file);
 
+  if (process.env.DEBUG === 'true') {
+    return res.send({ result: Math.round(Math.random() * 99) });
+  }
+
   // Spawn python process
-  const scriptPath = path.resolve(__dirname, '..', 'mfcc', 'wav_to_mfcc.py');
+  const scriptPath = path.resolve(__dirname, '..', 'mfcc', process.env.MODEL_SCRIPT_NAME);
   const pythonProcess = exec(`python3 "${scriptPath}" "${req.file.path}"`, (error, stdout, stderr) => {
     if (error || stderr) {
       // Log error message to console
@@ -38,20 +44,4 @@ app.post('/recording', upload.single('audio'), function (req, res) {
     // Defer response
     return res.send({ mfcc: stdout });
   });
-});*/
-
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 5000;
-const multer  = require('multer');
-const upload = multer();
-
-// console.log that your server is up and running
-app.listen(port, () => console.log(`Listening on port ${port}`));
-
-
-// routes
-app.post('/recording', upload.single('audio'), function (req, res) {
-  console.log(req.file);
-  res.send({ result: '10' });
 });

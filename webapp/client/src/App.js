@@ -7,9 +7,12 @@ import Step3 from "./components/step3";
 import Step4 from "./components/step4";
 import LanguagePicker from './components/LanguagePicker';
 
+const ENABLE_QR_CODE_READER = process.env.REACT_APP_ENABLE_QR_CODE_READER !== 'false';
+console.log(process.env, process.env.REACT_APP_ENABLE_QR_CODE_READER);
+
 function App() {
-  const [step, setStep] = useState(0);
-  const [participantId, setParticipantId] = useState();
+  const [step, setStep] = useState(ENABLE_QR_CODE_READER ? 0 : 1);
+  const [participantId, setParticipantId] = useState(ENABLE_QR_CODE_READER ? null : 1);
   const [recordingResult, setRecordingResult] = useState();
   const [visualisationResult, setVisualisationResult] = useState();
   const [language, setLanguage] = useState('en');
